@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pi Finder</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --primary-color: #6366f1;
+        --primary-hover: #4f46e5;
+        --secondary-color: #a855f7;
+        --text-color: #1e293b;
+        --bg-color: #f8fafc;
+        --card-bg: #ffffff;
+        --border-color: #e2e8f0;
+        --success-color: #10b981;
+        --error-color: #ef4444;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Poppins", sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        line-height: 1.6;
+        padding: 0;
+        margin: 0;
+        min-height: 100vh;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+
+      .card {
+        background-color: var(--card-bg);
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        transition: transform 0.3s ease;
+      }
+
+      .card:hover {
+        transform: translateY(-5px);
+      }
+
+      h1 {
+        color: var(--primary-color);
+        text-align: center;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+      }
+
+      .subtitle {
+        text-align: center;
+        color: #64748b;
+        margin-bottom: 2rem;
+        font-weight: 300;
+      }
+
+      .input-group {
+        margin-bottom: 1.5rem;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+      }
+
+      input[type="text"] {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease;
+      }
+
+      input[type="text"]:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+      }
+
+      .options-container {
+        display: none;
+        margin-top: 1.5rem;
+      }
+
+      .radio-group {
+        display: flex;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .radio-option {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+      }
+
+      .radio-option input {
+        margin-right: 0.5rem;
+        cursor: pointer;
+      }
+
+      button {
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        width: 100%;
+        transition: background-color 0.3s ease;
+      }
+
+      button:hover {
+        background-color: var(--primary-hover);
+      }
+
+      .result-container {
+        display: none;
+        margin-top: 1.5rem;
+        padding: 1.5rem;
+        background-color: rgba(99, 102, 241, 0.1);
+        border-radius: 8px;
+        text-align: center;
+      }
+
+      .loading {
+        display: none;
+        text-align: center;
+        margin: 1rem 0;
+      }
+
+      .spinner {
+        width: 2rem;
+        height: 2rem;
+        border: 4px solid rgba(99, 102, 241, 0.1);
+        border-radius: 50%;
+        border-top-color: var(--primary-color);
+        animation: spin 1s linear infinite;
+        margin: 0 auto;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .error {
+        color: var(--error-color);
+        margin-top: 0.5rem;
+        font-size: 0.875rem;
+      }
+
+      .footer {
+        text-align: center;
+        margin-top: 2rem;
+        color: #64748b;
+        font-size: 0.875rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="card">
+        <h1>Pi Finder</h1>
+        <p class="subtitle">
+          Calculate π(x) - the number of primes less than or equal to x
+        </p>
+
+        <div class="input-group">
+          <label for="inputX">Enter the value of x:</label>
+          <input
+            type="text"
+            id="inputX"
+            placeholder="Enter a positive number"
+            autocomplete="off"
+          />
+          <div class="error" id="inputError"></div>
+        </div>
+
+        <div id="memcacheOptions" class="options-container">
+          <label>Processing Options:</label>
+          <div class="radio-group">
+            <label class="radio-option">
+              <input type="radio" name="memcache" value="true" checked /> Use
+              Memcache
+            </label>
+            <label class="radio-option">
+              <input type="radio" name="memcache" value="false" /> Direct
+              Calculation
+            </label>
+          </div>
+        </div>
+
+        <div id="distributedMessage" class="options-container">
+          <p>
+            For values ≥ 10 million, distributed query will be used
+            automatically.
+          </p>
+        </div>
+
+        <button id="calculate">Calculate π(x)</button>
+
+        <div class="loading" id="loading">
+          <div class="spinner"></div>
+          <p>Calculating...</p>
+        </div>
+
+        <div class="result-container" id="resultContainer">
+          <h3>Result:</h3>
+          <p id="result"></p>
+        </div>
+      </div>
+
+      <p class="footer">© 2023 Pi Finder - A Cloud Computing Project</p>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const inputX = document.getElementById("inputX");
+        const calculateBtn = document.getElementById("calculate");
+        const resultContainer = document.getElementById("resultContainer");
+        const resultElement = document.getElementById("result");
+        const loadingElement = document.getElementById("loading");
+        const inputError = document.getElementById("inputError");
+        const memcacheOptions = document.getElementById("memcacheOptions");
+        const distributedMessage =
+          document.getElementById("distributedMessage");
+
+        // Handle input validation and show appropriate options
+        inputX.addEventListener("input", function () {
+          const value = parseFloat(this.value);
+
+          // Clear error first
+          inputError.textContent = "";
+          memcacheOptions.style.display = "none";
+          distributedMessage.style.display = "none";
+
+          if (this.value && !isNaN(value)) {
+            if (value <= 0) {
+              inputError.textContent = "Please enter a positive number";
+            } else if (value < 10000000) {
+              memcacheOptions.style.display = "block";
+              distributedMessage.style.display = "none";
+            } else {
+              distributedMessage.style.display = "block";
+              memcacheOptions.style.display = "none";
+            }
+          }
+        });
+
+        calculateBtn.addEventListener("click", async function () {
+          const x = inputX.value.trim();
+
+          // Reset UI
+          resultContainer.style.display = "none";
+          inputError.textContent = "";
+
+          // Validate input
+          if (!x) {
+            inputError.textContent = "Please enter a value for x";
+            return;
+          }
+
+          const numX = parseFloat(x);
+          if (isNaN(numX)) {
+            inputError.textContent = "Please enter a valid number";
+            return;
+          }
+
+          if (numX <= 0) {
+            inputError.textContent = "Please enter a positive number";
+            return;
+          }
+
+          // Show loading
+          loadingElement.style.display = "block";
+
+          try {
+            let endpoint, data;
+
+            // Determine which endpoint to use based on x value and options selected
+            if (numX < 10000000) {
+              // For values less than 10 million
+              const useMemcache =
+                document.querySelector('input[name="memcache"]:checked')
+                  .value === "true";
+
+              if (useMemcache) {
+                endpoint = "https://memcache-84132083246.us-central1.run.app";
+              } else {
+                endpoint = "https://try4-84132083246.us-central1.run.app";
+              }
+
+              // Create form data for POST request
+              data = new URLSearchParams();
+              data.append("x", x);
+
+              try {
+                // Direct fetch approach first
+                const response = await fetch(endpoint, {
+                  method: "POST",
+                  body: data,
+                  headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                  },
+                  mode: "cors",
+                });
+
+                if (!response.ok) {
+                  throw new Error("Network response was not ok");
+                }
+
+                const responseText = await response.text();
+                try {
+                  // Try to parse as JSON first
+                  const jsonData = JSON.parse(responseText);
+                  displayResult(`Result: ${jsonData.result}`);
+                } catch (e) {
+                  // If not JSON, display as is
+                  displayResult(responseText);
+                }
+              } catch (error) {
+                // Try fallback approach - open the URL in a new tab
+                const form = document.createElement("form");
+                form.method = "POST";
+                form.action = endpoint;
+                form.target = "_blank";
+
+                const input = document.createElement("input");
+                input.type = "hidden";
+                input.name = "x";
+                input.value = x;
+
+                form.appendChild(input);
+                document.body.appendChild(form);
+                form.submit();
+                document.body.removeChild(form);
+
+                displayResult(
+                  "Request opened in a new tab due to CORS restrictions. Check the new tab for results."
+                );
+              }
+            } else {
+              // For values 10 million or greater
+              // Always use distributed query logic
+              const result = await handleDistributedQuery(numX);
+              displayResult(result);
+            }
+          } catch (error) {
+            displayResult(`Error: ${error.message}`, true);
+          } finally {
+            loadingElement.style.display = "none";
+          }
+        });
+
+        // Function to handle distributed query logic
+        async function handleDistributedQuery(x) {
+          // Define chunk boundaries
+          const chunk1Min = 1;
+          const chunk1Max = 383028000000;
+          const chunk2Min = 383029000000;
+          const chunk2Max = 45216200000000;
+          const chunk3Min = 45216300000000;
+          const chunk3Max = 9412080000000000;
+          const chunk4Min = 9412090000000000;
+          const chunk4Max = 10000000000000000000000000;
+
+          let endpoint = "";
+
+          // Determine the appropriate endpoint based on the value of x
+          if (x >= chunk1Min && x <= chunk1Max) {
+            endpoint = "http://34.48.174.206:8080/find";
+          } else if (x >= chunk2Min && x <= chunk2Max) {
+            endpoint = "http://34.86.161.38:8080/find";
+          } else if (x >= chunk3Min && x <= chunk3Max) {
+            endpoint = "http://34.150.242.225:8080/find";
+          } else if (x >= chunk4Min && x <= chunk4Max) {
+            endpoint = "http://34.86.189.230:8080/find";
+          } else {
+            return "The input value x is out of range.";
+          }
+
+          // Build the request URL
+          const url = `${endpoint}?x=${x}`;
+
+          const response = await fetch(url, {
+            mode: "cors",
+          });
+          if (!response.ok) {
+            throw new Error("Network response was not ok");
+          }
+          return await response.text();
+        }
+
+        // Function to display the result
+        function displayResult(message, isError = false) {
+          resultElement.textContent = message;
+          resultContainer.style.display = "block";
+
+          if (isError) {
+            resultElement.style.color = "var(--error-color)";
+          } else {
+            resultElement.style.color = "var(--text-color)";
+          }
+        }
+      });
+    </script>
+  </body>
+</html>
